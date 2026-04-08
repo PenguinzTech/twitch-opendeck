@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#9147ff"/>
+  <!-- Film strip: left reel -->
+  <circle cx="18" cy="36" r="8" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <circle cx="18" cy="36" r="4" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <!-- Film strip: center (3 frames) -->
+  <rect x="28" y="22" width="8" height="8" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <rect x="28" y="32" width="8" height="8" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <rect x="28" y="42" width="8" height="8" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <!-- Film strip: right reel -->
+  <circle cx="54" cy="36" r="8" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <circle cx="54" cy="36" r="4" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <!-- Scissors -->
+  <path d="M 40 28 L 48 36 L 40 44" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

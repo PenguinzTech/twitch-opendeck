@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#3a3a3a"/>
+  <!-- Person head -->
+  <circle cx="36" cy="22" r="8" fill="#ffffff"/>
+  <!-- Person body -->
+  <path d="M 26 32 L 26 48 Q 26 52 30 52 L 42 52 Q 46 52 46 48 L 46 32 Q 46 28 36 28 Q 26 28 26 32 Z" fill="#ffffff"/>
+  <!-- Heart -->
+  <path d="M 48 38 Q 48 34 52 34 Q 54 34 55 36 Q 56 34 58 34 Q 62 34 62 38 Q 62 42 55 48 Q 48 42 48 38 Z" fill="#ff1493"/>
+</svg>

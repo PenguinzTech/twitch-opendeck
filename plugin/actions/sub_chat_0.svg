@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#3a3a3a"/>
+  <!-- Crown -->
+  <path d="M 18 48 L 22 30 L 28 40 L 36 24 L 44 40 L 50 30 L 54 48 Z" fill="#ffffff" stroke="#ffffff" stroke-width="1.5"/>
+  <!-- Crown base band -->
+  <rect x="16" y="48" width="40" height="6" fill="#ffffff"/>
+</svg>

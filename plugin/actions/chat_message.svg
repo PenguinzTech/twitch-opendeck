@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#9147ff"/>
+  <!-- Speech bubble -->
+  <path d="M 12 14 L 60 14 Q 64 14 64 18 L 64 44 Q 64 48 60 48 L 20 48 L 14 56 L 18 48 L 12 48 Q 8 48 8 44 L 8 18 Q 8 14 12 14 Z" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <!-- Send arrow inside -->
+  <path d="M 38 32 L 50 32 M 46 28 L 50 32 L 46 36" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

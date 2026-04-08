@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#9147ff"/>
+  <!-- Eye outline -->
+  <ellipse cx="36" cy="32" rx="18" ry="10" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <!-- Iris/pupil -->
+  <circle cx="36" cy="32" r="6" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <circle cx="36" cy="32" r="3" fill="#ffffff"/>
+  <!-- Eyelash top -->
+  <path d="M 20 24 Q 28 18 36 18 Q 44 18 52 24" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Eyelash bottom -->
+  <path d="M 20 40 Q 28 46 36 46 Q 44 46 52 40" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,229 @@
+{
+    "Name": "Twitch Stream Control",
+    "Description": "Control your Twitch stream directly from your deck. Toggle chat modes, run ads, create clips and markers, check viewer count, and more.",
+    "Author": "penguin",
+    "Version": "0.1.0",
+    "Category": "Twitch",
+    "Icon": "icon",
+    "CategoryIcon": "icon",
+    "OS": [
+        {
+            "Platform": "windows"
+        },
+        {
+            "Platform": "mac"
+        },
+        {
+            "Platform": "linux"
+        }
+    ],
+    "CodePaths": {
+        "x86_64-pc-windows-msvc": "twitch-opendeck-x86_64-pc-windows-msvc.exe",
+        "x86_64-apple-darwin": "twitch-opendeck-x86_64-apple-darwin",
+        "aarch64-apple-darwin": "twitch-opendeck-aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu": "twitch-opendeck-x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu": "twitch-opendeck-aarch64-unknown-linux-gnu"
+    },
+    "CodePathWin": "twitch-opendeck-x86_64-pc-windows-msvc.exe",
+    "CodePathMac": "twitch-opendeck-x86_64-apple-darwin",
+    "CodePathLin": "twitch-opendeck-x86_64-unknown-linux-gnu",
+    "PropertyInspectorPath": "pi/simple.html",
+    "Actions": [
+        {
+            "UUID": "dev.penguin.twitch.chatmessage",
+            "Name": "Chat Message",
+            "Icon": "actions/chat_message",
+            "Tooltip": "Send a preset message to your Twitch chat",
+            "PropertyInspectorPath": "pi/auth.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "actions/chat_message"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.clearchat",
+            "Name": "Clear Chat",
+            "Icon": "actions/clear_chat",
+            "Tooltip": "Clear all messages from your chat",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "actions/clear_chat"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.emotechat",
+            "Name": "Emote Only Chat",
+            "Icon": "actions/emote_chat_0",
+            "Tooltip": "Toggle emote-only chat mode",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "DisableAutomaticStates": true,
+            "States": [
+                {
+                    "Image": "actions/emote_chat_0",
+                    "Name": "Activate"
+                },
+                {
+                    "Image": "actions/emote_chat_1",
+                    "Name": "Deactivate"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.followerschat",
+            "Name": "Followers Only Chat",
+            "Icon": "actions/follower_chat_0",
+            "Tooltip": "Toggle follower-only chat mode",
+            "PropertyInspectorPath": "pi/follower_chat.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "DisableAutomaticStates": true,
+            "States": [
+                {
+                    "Image": "actions/follower_chat_0",
+                    "Name": "Activate"
+                },
+                {
+                    "Image": "actions/follower_chat_1",
+                    "Name": "Deactivate"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.subchat",
+            "Name": "Subscribers Only Chat",
+            "Icon": "actions/sub_chat_0",
+            "Tooltip": "Toggle subscriber-only chat mode",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "DisableAutomaticStates": true,
+            "States": [
+                {
+                    "Image": "actions/sub_chat_0",
+                    "Name": "Activate"
+                },
+                {
+                    "Image": "actions/sub_chat_1",
+                    "Name": "Deactivate"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.slowchat",
+            "Name": "Slow Mode Chat",
+            "Icon": "actions/slow_chat_0",
+            "Tooltip": "Toggle slow mode chat",
+            "PropertyInspectorPath": "pi/slow_chat.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "DisableAutomaticStates": true,
+            "States": [
+                {
+                    "Image": "actions/slow_chat_0",
+                    "Name": "Activate"
+                },
+                {
+                    "Image": "actions/slow_chat_1",
+                    "Name": "Deactivate"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.playad",
+            "Name": "Play Ad",
+            "Icon": "actions/play_ad",
+            "Tooltip": "Run a commercial break on your channel",
+            "PropertyInspectorPath": "pi/play_ad.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "actions/play_ad"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.createmarker",
+            "Name": "Stream Marker",
+            "Icon": "actions/create_marker",
+            "Tooltip": "Create a stream marker at this moment",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "actions/create_marker"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.createclip",
+            "Name": "Create Clip",
+            "Icon": "actions/create_clip",
+            "Tooltip": "Create a clip of the last 90 seconds",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "actions/create_clip"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.viewers",
+            "Name": "Viewer Count",
+            "Icon": "actions/viewers",
+            "Tooltip": "Display current live viewer count",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "SupportedInMultiActions": false,
+            "States": [
+                {
+                    "Image": "actions/viewers"
+                }
+            ]
+        },
+        {
+            "UUID": "dev.penguin.twitch.shieldmode",
+            "Name": "Shield Mode",
+            "Icon": "actions/shield_mode_0",
+            "Tooltip": "Toggle Shield Mode to protect your chat",
+            "PropertyInspectorPath": "pi/simple.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "DisableAutomaticStates": true,
+            "States": [
+                {
+                    "Image": "actions/shield_mode_0",
+                    "Name": "Activate"
+                },
+                {
+                    "Image": "actions/shield_mode_1",
+                    "Name": "Deactivate"
+                }
+            ]
+        }
+    ]
+}

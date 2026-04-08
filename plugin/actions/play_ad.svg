@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#9147ff"/>
+  <!-- Dollar sign -->
+  <text x="36" y="48" font-size="44" font-weight="bold" fill="#ffffff" text-anchor="middle" font-family="Arial">$</text>
+  <!-- Play button outline around it -->
+  <path d="M 12 28 L 28 16 L 28 40 Z" fill="none" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+</svg>

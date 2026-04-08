@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72">
+  <rect width="72" height="72" rx="8" fill="#9147ff"/>
+  <!-- Flag pole -->
+  <rect x="34" y="32" width="4" height="32" fill="#ffffff"/>
+  <!-- Flag -->
+  <path d="M 38 32 L 56 24 L 56 40 Z" fill="#ffffff"/>
+  <!-- Flag outline for definition -->
+  <path d="M 56 24 L 56 40 L 38 32 Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>
