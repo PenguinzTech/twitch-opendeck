@@ -9,7 +9,7 @@ pub struct CreateMarkerAction;
 #[async_trait]
 impl Action for CreateMarkerAction {
     type Settings = EmptySettings;
-    const UUID: &'static str = "dev.penguin.twitch.createmarker";
+    const UUID: &'static str = "io.pngz.twitch.createmarker";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
         if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }

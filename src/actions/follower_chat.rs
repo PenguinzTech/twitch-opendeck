@@ -10,7 +10,7 @@ pub struct FollowerChatAction;
 #[async_trait]
 impl Action for FollowerChatAction {
     type Settings = FollowerChatSettings;
-    const UUID: &'static str = "dev.penguin.twitch.followerschat";
+    const UUID: &'static str = "io.pngz.twitch.followerschat";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
         if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }

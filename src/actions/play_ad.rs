@@ -9,7 +9,7 @@ pub struct PlayAdAction;
 #[async_trait]
 impl Action for PlayAdAction {
     type Settings = PlayAdSettings;
-    const UUID: &'static str = "dev.penguin.twitch.playad";
+    const UUID: &'static str = "io.pngz.twitch.playad";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
         if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }

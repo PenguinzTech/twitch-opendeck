@@ -10,7 +10,7 @@ pub struct SlowChatAction;
 #[async_trait]
 impl Action for SlowChatAction {
     type Settings = SlowChatSettings;
-    const UUID: &'static str = "dev.penguin.twitch.slowchat";
+    const UUID: &'static str = "io.pngz.twitch.slowchat";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
         if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }

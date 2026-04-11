@@ -1,6 +1,6 @@
 .PHONY: build install uninstall clean dev
 
-PLUGIN_DIR := $(HOME)/.config/opendeck/plugins/dev.penguin.twitch.sdPlugin
+PLUGIN_DIR := $(HOME)/.config/opendeck/plugins/io.pngz.twitch.sdPlugin
 
 build:
 	. $$HOME/.cargo/env && cargo build --release

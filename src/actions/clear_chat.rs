@@ -9,7 +9,7 @@ pub struct ClearChatAction;
 #[async_trait]
 impl Action for ClearChatAction {
     type Settings = EmptySettings;
-    const UUID: &'static str = "dev.penguin.twitch.clearchat";
+    const UUID: &'static str = "io.pngz.twitch.clearchat";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
         if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }

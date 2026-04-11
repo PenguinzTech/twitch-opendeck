@@ -21,7 +21,7 @@ fn format_viewers(n: u32) -> String {
 #[async_trait]
 impl Action for ViewersAction {
     type Settings = EmptySettings;
-    const UUID: &'static str = "dev.penguin.twitch.viewers";
+    const UUID: &'static str = "io.pngz.twitch.viewers";
 
     async fn will_appear(&self, instance: &Instance, _settings: &Self::Settings) -> OpenActionResult<()> {
         match get_valid_token().await {

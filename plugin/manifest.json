@@ -30,7 +30,7 @@
     "PropertyInspectorPath": "pi/simple.html",
     "Actions": [
         {
-            "UUID": "dev.penguin.twitch.chatmessage",
+            "UUID": "io.pngz.twitch.chatmessage",
             "Name": "Chat Message",
             "Icon": "actions/chat_message",
             "Tooltip": "Send a preset message to your Twitch chat",
@@ -45,7 +45,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.clearchat",
+            "UUID": "io.pngz.twitch.clearchat",
             "Name": "Clear Chat",
             "Icon": "actions/clear_chat",
             "Tooltip": "Clear all messages from your chat",
@@ -60,7 +60,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.emotechat",
+            "UUID": "io.pngz.twitch.emotechat",
             "Name": "Emote Only Chat",
             "Icon": "actions/emote_chat_0",
             "Tooltip": "Toggle emote-only chat mode",
@@ -81,7 +81,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.followerschat",
+            "UUID": "io.pngz.twitch.followerschat",
             "Name": "Followers Only Chat",
             "Icon": "actions/follower_chat_0",
             "Tooltip": "Toggle follower-only chat mode",
@@ -102,7 +102,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.subchat",
+            "UUID": "io.pngz.twitch.subchat",
             "Name": "Subscribers Only Chat",
             "Icon": "actions/sub_chat_0",
             "Tooltip": "Toggle subscriber-only chat mode",
@@ -123,7 +123,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.slowchat",
+            "UUID": "io.pngz.twitch.slowchat",
             "Name": "Slow Mode Chat",
             "Icon": "actions/slow_chat_0",
             "Tooltip": "Toggle slow mode chat",
@@ -144,7 +144,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.playad",
+            "UUID": "io.pngz.twitch.playad",
             "Name": "Play Ad",
             "Icon": "actions/play_ad",
             "Tooltip": "Run a commercial break on your channel",
@@ -159,7 +159,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.createmarker",
+            "UUID": "io.pngz.twitch.createmarker",
             "Name": "Stream Marker",
             "Icon": "actions/create_marker",
             "Tooltip": "Create a stream marker at this moment",
@@ -174,7 +174,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.createclip",
+            "UUID": "io.pngz.twitch.createclip",
             "Name": "Create Clip",
             "Icon": "actions/create_clip",
             "Tooltip": "Create a clip of the last 90 seconds",
@@ -189,7 +189,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.viewers",
+            "UUID": "io.pngz.twitch.viewers",
             "Name": "Viewer Count",
             "Icon": "actions/viewers",
             "Tooltip": "Display current live viewer count",
@@ -205,7 +205,7 @@
             ]
         },
         {
-            "UUID": "dev.penguin.twitch.shieldmode",
+            "UUID": "io.pngz.twitch.shieldmode",
             "Name": "Shield Mode",
             "Icon": "actions/shield_mode_0",
             "Tooltip": "Toggle Shield Mode to protect your chat",

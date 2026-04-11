@@ -10,7 +10,7 @@ pub struct ShieldModeAction;
 #[async_trait]
 impl Action for ShieldModeAction {
     type Settings = EmptySettings;
-    const UUID: &'static str = "dev.penguin.twitch.shieldmode";
+    const UUID: &'static str = "io.pngz.twitch.shieldmode";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
         if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }
