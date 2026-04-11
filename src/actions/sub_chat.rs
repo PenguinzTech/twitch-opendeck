@@ -13,7 +13,10 @@ impl Action for SubChatAction {
     const UUID: &'static str = "io.pngz.twitch.subchat";
 
     async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
-        if let Some(l) = &settings.button_label { crate::auth_handler::set_bold_title(instance, Some(l.as_str())).await?; }
+        crate::auth_handler::restore_title(instance, settings.button_label.as_deref()).await?;
+        if let Some(img) = &settings.button_image {
+            crate::auth_handler::set_button_image(instance, Some(img.as_str())).await?;
+        }
         let Some((token, user_id, client_id)) = get_valid_token().await else { return Ok(()); };
         match twitch_api::get_chat_settings(&token, &client_id, &user_id, &user_id).await {
             Ok(s) => instance.set_state(if s.subscriber_mode { 1 } else { 0 }).await?,

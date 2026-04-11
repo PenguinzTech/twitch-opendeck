@@ -4,6 +4,17 @@ use tokio::sync::RwLock;
 
 pub const BUTTON_LABEL_MAX: usize = 10;
 
+pub static TITLE_CACHE: LazyLock<RwLock<std::collections::HashMap<String, String>>> =
+    LazyLock::new(|| RwLock::new(std::collections::HashMap::new()));
+
+pub async fn cache_title(instance_id: &str, title: &str) {
+    TITLE_CACHE.write().await.insert(instance_id.to_string(), title.to_string());
+}
+
+pub async fn get_cached_title(instance_id: &str) -> Option<String> {
+    TITLE_CACHE.read().await.get(instance_id).cloned()
+}
+
 /// Global plugin settings persisted in OpenDeck
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct GlobalSettings {
@@ -53,6 +64,8 @@ pub struct ChatMessageSettings {
     pub message: String,
     #[serde(default)]
     pub button_label: Option<String>,
+    #[serde(default)]
+    pub button_image: Option<String>,
 }
 
 /// Settings for Play Ad action
@@ -61,11 +74,13 @@ pub struct PlayAdSettings {
     pub duration_seconds: u32,
     #[serde(default)]
     pub button_label: Option<String>,
+    #[serde(default)]
+    pub button_image: Option<String>,
 }
 
 impl Default for PlayAdSettings {
     fn default() -> Self {
-        Self { duration_seconds: 30, button_label: None }
+        Self { duration_seconds: 30, button_label: None, button_image: None }
     }
 }
 
@@ -75,11 +90,13 @@ pub struct SlowChatSettings {
     pub wait_seconds: u32,
     #[serde(default)]
     pub button_label: Option<String>,
+    #[serde(default)]
+    pub button_image: Option<String>,
 }
 
 impl Default for SlowChatSettings {
     fn default() -> Self {
-        Self { wait_seconds: 30, button_label: None }
+        Self { wait_seconds: 30, button_label: None, button_image: None }
     }
 }
 
@@ -89,11 +106,13 @@ pub struct FollowerChatSettings {
     pub follow_duration_minutes: u32,
     #[serde(default)]
     pub button_label: Option<String>,
+    #[serde(default)]
+    pub button_image: Option<String>,
 }
 
 impl Default for FollowerChatSettings {
     fn default() -> Self {
-        Self { follow_duration_minutes: 10, button_label: None }
+        Self { follow_duration_minutes: 10, button_label: None, button_image: None }
     }
 }
 
@@ -103,4 +122,6 @@ impl Default for FollowerChatSettings {
 pub struct EmptySettings {
     #[serde(default)]
     pub button_label: Option<String>,
+    #[serde(default)]
+    pub button_image: Option<String>,
 }

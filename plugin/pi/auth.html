@@ -5,7 +5,7 @@
     <title>Chat Message</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #1a1a2e; color: #fff; font-family: Arial, sans-serif; padding: 15px; }
+        body { background: #1a1a2e; color: #fff; font-family: Arial, sans-serif; padding: 15px; color-scheme: dark; }
         .container { max-width: 400px; }
         .status-box { margin-bottom: 15px; padding: 10px 12px; background: #16213e; border-radius: 4px; font-size: 14px; }
         .status-label { color: #afafaf; font-size: 12px; margin-bottom: 4px; }
@@ -14,8 +14,10 @@
         label { display: block; color: #afafaf; font-size: 12px; margin-bottom: 5px; }
         input[type="text"], input[type="password"], textarea {
             width: 100%; padding: 8px; background: #16213e; border: 1px solid #333;
-            color: #fff; border-radius: 4px; font-size: 13px;
+            color: #e2e8f0; border-radius: 4px; font-size: 13px;
         }
+        .image-preview { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; margin-top: 6px; display: none; border: 1px solid #333; }
+        input[type="file"] { display: none; }
         textarea { resize: vertical; min-height: 70px; font-family: monospace; }
         input:focus, input[type="password"]:focus, textarea:focus { outline: none; border-color: #9147ff; }
         .hint { font-size: 11px; color: #888; margin-top: 4px; }
@@ -74,8 +76,19 @@
                 <textarea id="message" placeholder="Type your chat message..."></textarea>
             </div>
             <div class="form-group">
-                <label>Button Label (max 10 chars):</label>
-                <input type="text" id="button-label" maxlength="10" placeholder="Optional label">
+                <label>Button Label Line 1 (max 10 chars):</label>
+                <input type="text" id="label-line1" maxlength="10" placeholder="Line 1">
+            </div>
+            <div class="form-group">
+                <label>Button Label Line 2 (max 10 chars):</label>
+                <input type="text" id="label-line2" maxlength="10" placeholder="Line 2 (optional)">
+            </div>
+            <div class="form-group">
+                <label>Button Image:</label>
+                <button type="button" onclick="document.getElementById('image-file').click()">Choose Image</button>
+                <input type="file" id="image-file" accept="image/*" onchange="handleImageFile(this)">
+                <img id="image-preview" class="image-preview" alt="preview">
+                <button type="button" id="clear-image-btn" style="display:none;margin-top:4px;background:#3a0f0f;" onclick="clearImage()">Clear Image</button>
             </div>
             <button onclick="saveSettings()">Save</button>
         </div>
@@ -128,25 +141,32 @@
             }
         }
 
+        function getLabel() {
+            var line1 = (document.getElementById('label-line1').value || '').slice(0, 10);
+            var line2 = (document.getElementById('label-line2').value || '').slice(0, 10);
+            return line2 ? line1 + '\n' + line2 : line1;
+        }
+
         function onSettingsReceived(settings) {
             if (settings && settings.message) {
                 document.getElementById('message').value = settings.message;
             }
-            if (document.getElementById('button-label') && settings.button_label) {
-                document.getElementById('button-label').value = settings.button_label;
+            if (settings && settings.button_label) {
+                var parts = settings.button_label.split('\n');
+                document.getElementById('label-line1').value = parts[0] || '';
+                document.getElementById('label-line2').value = parts[1] || '';
+            }
+            if (settings && settings.button_image) {
+                showImagePreview(settings.button_image);
             }
         }
 
-        function saveLabel() {
-            var label = document.getElementById('button-label').value;
-            sendToPlugin({ event: 'set_title', title: label });
-        }
-
         function saveSettings() {
-            var label = document.getElementById('button-label') ? document.getElementById('button-label').value : '';
+            var label = getLabel();
             setSettings({ message: document.getElementById('message').value, button_label: label || null });
             sendToPlugin({ event: 'set_title', title: label });
-            var btn = document.querySelector('#action-section button');
+            var btns = document.querySelectorAll('#action-section button:not(#clear-image-btn)');
+            var btn = btns[btns.length - 1];
             var orig = btn.textContent;
             btn.textContent = 'Saved!';
             btn.style.background = '#22c55e';
@@ -154,6 +174,35 @@
                 btn.textContent = orig;
                 btn.style.background = '';
             }, 1500);
+        }
+
+        function handleImageFile(input) {
+            var file = input.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var dataUrl = e.target.result;
+                showImagePreview(dataUrl);
+                setSettings({ message: document.getElementById('message').value, button_label: getLabel() || null, button_image: dataUrl });
+                sendToPlugin({ event: 'set_image', image_data: dataUrl });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showImagePreview(dataUrl) {
+            var img = document.getElementById('image-preview');
+            img.src = dataUrl;
+            img.style.display = 'block';
+            document.getElementById('clear-image-btn').style.display = 'block';
+        }
+
+        function clearImage() {
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('image-preview').src = '';
+            document.getElementById('clear-image-btn').style.display = 'none';
+            document.getElementById('image-file').value = '';
+            setSettings({ message: document.getElementById('message').value, button_label: getLabel() || null, button_image: null });
+            sendToPlugin({ event: 'set_image', image_data: '' });
         }
 
         function startAuth() {
@@ -176,8 +225,9 @@
 
         function handlePluginMessage(payload) {
             if (payload.event === 'title_set') {
-                var el = document.getElementById('button-label');
-                if (el) el.value = payload.title;
+                var parts = (payload.title || '').split('\n');
+                document.getElementById('label-line1').value = parts[0] || '';
+                document.getElementById('label-line2').value = parts[1] || '';
             } else if (payload.event === 'auth_status') {
                 var statusDiv = document.getElementById('auth-status');
                 if (payload.authenticated && payload.username) {

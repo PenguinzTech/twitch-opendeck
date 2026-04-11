@@ -12,6 +12,7 @@ use simplelog::{Config, LevelFilter, TermLogger, TerminalMode, ColorChoice};
 
 use crate::actions::{
     chat_message::ChatMessageAction,
+    setup::SetupAction,
     clear_chat::ClearChatAction,
     create_clip::CreateClipAction,
     create_marker::CreateMarkerAction,
@@ -38,6 +39,7 @@ async fn main() -> OpenActionResult<()> {
     set_global_event_handler(Box::leak(Box::new(TwitchGlobalHandler)));
 
     // Register all actions
+    register_action(SetupAction).await;
     register_action(ChatMessageAction).await;
     register_action(ClearChatAction).await;
     register_action(CreateClipAction).await;

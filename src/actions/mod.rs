@@ -1,4 +1,5 @@
 pub mod chat_message;
+pub mod setup;
 pub mod clear_chat;
 pub mod create_clip;
 pub mod create_marker;

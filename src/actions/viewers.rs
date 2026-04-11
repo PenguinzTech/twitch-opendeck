@@ -23,7 +23,10 @@ impl Action for ViewersAction {
     type Settings = EmptySettings;
     const UUID: &'static str = "io.pngz.twitch.viewers";
 
-    async fn will_appear(&self, instance: &Instance, _settings: &Self::Settings) -> OpenActionResult<()> {
+    async fn will_appear(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
+        if let Some(img) = &settings.button_image {
+            crate::auth_handler::set_button_image(instance, Some(img.as_str())).await?;
+        }
         match get_valid_token().await {
             Some((token, user_id, client_id)) => {
                 match twitch_api::get_stream_info(&token, &client_id, &user_id).await {

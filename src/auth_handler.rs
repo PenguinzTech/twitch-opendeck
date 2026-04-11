@@ -3,11 +3,13 @@ use crate::settings::{read_settings, save_settings, BUTTON_LABEL_MAX};
 use openaction::{Instance, OpenActionResult, send_arbitrary_json};
 use serde_json::json;
 
-/// Set the button title with bold white styling.
+/// Set the button title with bold white styling, with multiline support.
 pub async fn set_bold_title(instance: &Instance, title: Option<&str>) -> OpenActionResult<()> {
     match title.filter(|t| !t.is_empty()) {
         None => instance.set_title(None::<&str>, None).await,
         Some(t) => {
+            crate::settings::cache_title(&instance.instance_id, t).await;
+            let multiline = t.contains('\n');
             send_arbitrary_json(json!({
                 "event": "setTitle",
                 "context": instance.instance_id,
@@ -15,11 +17,11 @@ pub async fn set_bold_title(instance: &Instance, title: Option<&str>) -> OpenAct
                     "title": t,
                     "titleParameters": {
                         "fontFamily": "",
-                        "fontSize": 14,
+                        "fontSize": if multiline { 10 } else { 14 },
                         "fontStyle": "Bold",
                         "fontUnderline": false,
                         "showTitle": true,
-                        "titleAlignment": "bottom",
+                        "titleAlignment": if multiline { "middle" } else { "bottom" },
                         "titleColor": "#ffffff"
                     }
                 }
@@ -27,6 +29,32 @@ pub async fn set_bold_title(instance: &Instance, title: Option<&str>) -> OpenAct
             .await
         }
     }
+}
+
+/// Restore the button title from settings or cache on will_appear.
+pub async fn restore_title(instance: &Instance, label_from_settings: Option<&str>) -> OpenActionResult<()> {
+    if let Some(l) = label_from_settings.filter(|t| !t.is_empty()) {
+        return set_bold_title(instance, Some(l)).await;
+    }
+    if let Some(cached) = crate::settings::get_cached_title(&instance.instance_id).await {
+        if !cached.is_empty() {
+            return set_bold_title(instance, Some(&cached)).await;
+        }
+    }
+    Ok(())
+}
+
+/// Set the button image from a base64 data URI string.
+pub async fn set_button_image(instance: &Instance, image_data: Option<&str>) -> OpenActionResult<()> {
+    send_arbitrary_json(json!({
+        "event": "setImage",
+        "context": instance.instance_id,
+        "payload": {
+            "image": image_data.unwrap_or(""),
+            "target": 0
+        }
+    }))
+    .await
 }
 
 /// Shared handler for auth-related PI messages. Call this from send_to_plugin in every action.
@@ -68,23 +96,59 @@ pub async fn handle_auth_message(
         }
         "get_auth_status" => {
             let s = read_settings().await;
-            instance
-                .send_to_property_inspector(json!({
-                    "event": "auth_status",
-                    "authenticated": s.is_authenticated(),
-                    "username": s.username,
-                    "client_id": s.client_id
-                }))
-                .await?;
+            let instance_id = instance.instance_id.clone();
+            tokio::spawn(async move {
+                let (authenticated, username, client_id) = if s.is_authenticated() {
+                    if let Some(token) = s.access_token.as_deref() {
+                        match validate_token(token).await {
+                            Ok(v) => (true, Some(v.login), s.client_id.clone()),
+                            Err(_) => {
+                                // Token is invalid — clear it from settings
+                                let mut updated = s.clone();
+                                updated.access_token = None;
+                                updated.refresh_token = None;
+                                updated.token_expires_at = None;
+                                updated.user_id = None;
+                                updated.username = None;
+                                let _ = save_settings(updated).await;
+                                (false, None, s.client_id.clone())
+                            }
+                        }
+                    } else {
+                        (false, None, s.client_id.clone())
+                    }
+                } else {
+                    (false, None, s.client_id.clone())
+                };
+                if let Some(inst) = openaction::get_instance(instance_id).await {
+                    let _ = inst.send_to_property_inspector(json!({
+                        "event": "auth_status",
+                        "authenticated": authenticated,
+                        "username": username,
+                        "client_id": client_id
+                    })).await;
+                }
+            });
         }
         "set_title" => {
             let raw = payload.get("title").and_then(|t| t.as_str()).unwrap_or("");
-            let title: String = raw.chars().take(BUTTON_LABEL_MAX).collect();
+            let title: String = raw.lines().take(2)
+                .map(|line| line.chars().take(BUTTON_LABEL_MAX).collect::<String>())
+                .collect::<Vec<_>>().join("\n");
             set_bold_title(instance, if title.is_empty() { None } else { Some(&title) }).await?;
             instance.send_to_property_inspector(json!({
                 "event": "title_set",
                 "title": title
             })).await?;
+        }
+        "set_image" => {
+            let data = payload.get("image_data").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let instance_id = instance.instance_id.clone();
+            tokio::spawn(async move {
+                if let Some(inst) = openaction::get_instance(instance_id).await {
+                    let _ = set_button_image(&inst, if data.is_empty() { None } else { Some(&data) }).await;
+                }
+            });
         }
         _ => {}
     }

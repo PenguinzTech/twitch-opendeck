@@ -30,6 +30,21 @@
     "PropertyInspectorPath": "pi/simple.html",
     "Actions": [
         {
+            "UUID": "io.pngz.twitch.setup",
+            "Name": "Setup",
+            "Icon": "icon",
+            "Tooltip": "Configure Twitch authentication and plugin settings",
+            "PropertyInspectorPath": "pi/auth.html",
+            "Controllers": [
+                "Keypad"
+            ],
+            "States": [
+                {
+                    "Image": "icon"
+                }
+            ]
+        },
+        {
             "UUID": "io.pngz.twitch.chatmessage",
             "Name": "Chat Message",
             "Icon": "actions/chat_message",
