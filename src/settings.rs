@@ -68,9 +68,14 @@ pub struct ChatMessageSettings {
     pub button_image: Option<String>,
 }
 
+fn default_duration_seconds() -> u32 { 30 }
+fn default_wait_seconds() -> u32 { 30 }
+fn default_follow_duration_minutes() -> u32 { 10 }
+
 /// Settings for Play Ad action
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PlayAdSettings {
+    #[serde(default = "default_duration_seconds")]
     pub duration_seconds: u32,
     #[serde(default)]
     pub button_label: Option<String>,
@@ -87,6 +92,7 @@ impl Default for PlayAdSettings {
 /// Settings for Slow Chat action
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SlowChatSettings {
+    #[serde(default = "default_wait_seconds")]
     pub wait_seconds: u32,
     #[serde(default)]
     pub button_label: Option<String>,
@@ -103,6 +109,7 @@ impl Default for SlowChatSettings {
 /// Settings for Follower-Only Chat action
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FollowerChatSettings {
+    #[serde(default = "default_follow_duration_minutes")]
     pub follow_duration_minutes: u32,
     #[serde(default)]
     pub button_label: Option<String>,

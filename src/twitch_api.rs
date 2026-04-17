@@ -1,4 +1,4 @@
-use reqwest::{Client, StatusCode};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::LazyLock;
@@ -10,6 +10,8 @@ const API_BASE: &str = "https://api.twitch.tv/helix";
 #[derive(Debug)]
 pub enum TwitchApiError {
     Http(reqwest::Error),
+    /// 401 Unauthorized — token is invalid or revoked; caller should refresh or re-auth
+    Unauthorized,
     Api { status: u16, message: String },
 }
 
@@ -23,6 +25,7 @@ impl std::fmt::Display for TwitchApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TwitchApiError::Http(e) => write!(f, "HTTP error: {}", e),
+            TwitchApiError::Unauthorized => write!(f, "Unauthorized (token expired or revoked)"),
             TwitchApiError::Api { status, message } => {
                 write!(f, "API error ({}): {}", status, message)
             }
@@ -49,6 +52,11 @@ async fn handle_response<T: serde::de::DeserializeOwned>(
     response: reqwest::Response,
 ) -> Result<T, TwitchApiError> {
     let status = response.status().as_u16();
+
+    if status == 401 {
+        return Err(TwitchApiError::Unauthorized);
+    }
+
     let body = response.text().await?;
 
     if status >= 200 && status < 300 {
@@ -68,6 +76,24 @@ async fn handle_response<T: serde::de::DeserializeOwned>(
             message: error_msg,
         })
     }
+
+}
+
+/// Helper for void API responses (no body to deserialize), with 401 detection.
+async fn handle_void_response(response: reqwest::Response) -> Result<(), TwitchApiError> {
+    let status = response.status().as_u16();
+    if status == 401 {
+        return Err(TwitchApiError::Unauthorized);
+    }
+    if status >= 200 && status < 300 {
+        return Ok(());
+    }
+    let body = response.text().await?;
+    let error_msg = serde_json::from_str::<serde_json::Value>(&body)
+        .ok()
+        .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from))
+        .unwrap_or_else(|| body);
+    Err(TwitchApiError::Api { status, message: error_msg })
 }
 
 // ============================================================================
@@ -187,21 +213,7 @@ pub async fn patch_chat_settings(
         .send()
         .await?;
 
-    let status = response.status().as_u16();
-    if status >= 200 && status < 300 {
-        Ok(())
-    } else {
-        let body = response.text().await?;
-        let error_msg = serde_json::from_str::<serde_json::Value>(&body)
-            .ok()
-            .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from))
-            .unwrap_or_else(|| body);
-
-        Err(TwitchApiError::Api {
-            status,
-            message: error_msg,
-        })
-    }
+    handle_void_response(response).await
 }
 
 /// Send a message to chat
@@ -227,21 +239,7 @@ pub async fn send_chat_message(
         .send()
         .await?;
 
-    let status = response.status().as_u16();
-    if status >= 200 && status < 300 {
-        Ok(())
-    } else {
-        let body_text = response.text().await?;
-        let error_msg = serde_json::from_str::<serde_json::Value>(&body_text)
-            .ok()
-            .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from))
-            .unwrap_or_else(|| body_text);
-
-        Err(TwitchApiError::Api {
-            status,
-            message: error_msg,
-        })
-    }
+    handle_void_response(response).await
 }
 
 /// Clear chat messages
@@ -262,21 +260,7 @@ pub async fn clear_chat(
         .send()
         .await?;
 
-    let status = response.status().as_u16();
-    if status >= 200 && status < 300 {
-        Ok(())
-    } else {
-        let body = response.text().await?;
-        let error_msg = serde_json::from_str::<serde_json::Value>(&body)
-            .ok()
-            .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from))
-            .unwrap_or_else(|| body);
-
-        Err(TwitchApiError::Api {
-            status,
-            message: error_msg,
-        })
-    }
+    handle_void_response(response).await
 }
 
 /// Create a stream marker
@@ -299,21 +283,7 @@ pub async fn create_stream_marker(
         .send()
         .await?;
 
-    let status = response.status().as_u16();
-    if status >= 200 && status < 300 {
-        Ok(())
-    } else {
-        let body_text = response.text().await?;
-        let error_msg = serde_json::from_str::<serde_json::Value>(&body_text)
-            .ok()
-            .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from))
-            .unwrap_or_else(|| body_text);
-
-        Err(TwitchApiError::Api {
-            status,
-            message: error_msg,
-        })
-    }
+    handle_void_response(response).await
 }
 
 /// Create a clip
@@ -361,21 +331,7 @@ pub async fn start_commercial(
         .send()
         .await?;
 
-    let status = response.status().as_u16();
-    if status >= 200 && status < 300 {
-        Ok(())
-    } else {
-        let body_text = response.text().await?;
-        let error_msg = serde_json::from_str::<serde_json::Value>(&body_text)
-            .ok()
-            .and_then(|v| v.get("message").and_then(|m| m.as_str()).map(String::from))
-            .unwrap_or_else(|| body_text);
-
-        Err(TwitchApiError::Api {
-            status,
-            message: error_msg,
-        })
-    }
+    handle_void_response(response).await
 }
 
 /// Update shield mode status

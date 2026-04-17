@@ -1,6 +1,6 @@
 use crate::auth::get_valid_token;
 use crate::settings::EmptySettings;
-use crate::twitch_api;
+use crate::twitch_api::{self, TwitchApiError};
 use openaction::{Action, Instance, OpenActionResult, async_trait};
 use serde_json::Value;
 
@@ -45,12 +45,28 @@ impl Action for ViewersAction {
             loop {
                 interval.tick().await;
                 let Some(inst) = openaction::get_instance(instance_id.clone()).await else { break };
-                if let Some((token, user_id, client_id)) = get_valid_token().await {
-                    match twitch_api::get_stream_info(&token, &client_id, &user_id).await {
-                        Ok(Some(info)) => { let _ = inst.set_title(Some(format_viewers(info.viewer_count)), None).await; }
-                        Ok(None) => { let _ = inst.set_title(Some("Offline"), None).await; }
-                        Err(_) => {}
+
+                let Some((token, user_id, client_id)) = get_valid_token().await else {
+                    // No valid token — stop polling silently
+                    break;
+                };
+
+                let result = twitch_api::get_stream_info(&token, &client_id, &user_id).await;
+
+                let result = if matches!(result, Err(TwitchApiError::Unauthorized)) {
+                    // Token revoked mid-session — try refresh once
+                    match crate::auth_handler::refresh_auth(&instance_id).await {
+                        Some((t2, uid2, cid2)) => twitch_api::get_stream_info(&t2, &cid2, &uid2).await,
+                        None => break, // Refresh failed; auth cleared and PI notified — stop polling
                     }
+                } else {
+                    result
+                };
+
+                match result {
+                    Ok(Some(info)) => { let _ = inst.set_title(Some(format_viewers(info.viewer_count)), None).await; }
+                    Ok(None) => { let _ = inst.set_title(Some("Offline"), None).await; }
+                    Err(_) => {} // Transient error — keep polling
                 }
             }
         });

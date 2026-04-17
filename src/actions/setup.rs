@@ -1,4 +1,4 @@
-use crate::auth::get_valid_token;
+use crate::auth_handler::get_auth;
 use openaction::{Action, Instance, OpenActionResult, async_trait};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -18,9 +18,9 @@ impl Action for SetupAction {
     }
 
     async fn key_down(&self, instance: &Instance, _settings: &Self::Settings) -> OpenActionResult<()> {
-        match get_valid_token().await {
+        match get_auth(instance).await? {
             Some(_) => instance.show_ok().await?,
-            None => instance.show_alert().await?,
+            None => {} // get_auth already showed alert and notified PI
         }
         Ok(())
     }

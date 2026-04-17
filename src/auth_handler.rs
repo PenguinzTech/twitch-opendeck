@@ -1,4 +1,4 @@
-use crate::auth::{poll_for_token, start_device_flow, store_token, validate_token};
+use crate::auth::{clear_auth_tokens, poll_for_token, refresh_access_token, start_device_flow, store_token, validate_token};
 use crate::settings::{read_settings, save_settings, BUTTON_LABEL_MAX};
 use openaction::{Instance, OpenActionResult, send_arbitrary_json};
 use serde_json::json;
@@ -57,6 +57,67 @@ pub async fn set_button_image(instance: &Instance, image_data: Option<&str>) -> 
     .await
 }
 
+/// Send a reauth_required event to the PI for a specific instance.
+/// This prompts the PI to show the re-authentication UI.
+pub async fn notify_reauth_needed(instance_id: &str) {
+    if let Some(inst) = openaction::get_instance(instance_id.to_string()).await {
+        let _ = inst
+            .send_to_property_inspector(json!({"event": "reauth_required"}))
+            .await;
+    }
+}
+
+/// Get a valid auth token for an action. If auth is unavailable, notifies the PI
+/// and shows an alert on the button. Returns None if the action should abort.
+pub async fn get_auth(instance: &Instance) -> OpenActionResult<Option<(String, String, String)>> {
+    match crate::auth::get_valid_token().await {
+        Some(tok) => Ok(Some(tok)),
+        None => {
+            notify_reauth_needed(&instance.instance_id).await;
+            instance.show_alert().await?;
+            Ok(None)
+        }
+    }
+}
+
+/// After receiving a 401 from the API, attempt a token refresh.
+/// Returns new credentials if refresh succeeded (caller should retry the API call).
+/// Returns None if refresh failed — auth is cleared and PI is notified to re-auth.
+pub async fn refresh_auth(instance_id: &str) -> Option<(String, String, String)> {
+    let settings = read_settings().await;
+    let rt = match settings.refresh_token.clone() {
+        Some(rt) => rt,
+        None => {
+            log::warn!("No refresh token available after 401");
+            clear_auth_tokens().await;
+            notify_reauth_needed(instance_id).await;
+            return None;
+        }
+    };
+
+    match refresh_access_token(&settings.client_id, &settings.client_secret, &rt).await {
+        Ok(new_token) => {
+            let access = new_token.access_token.clone();
+            let user_id = settings.user_id.clone().unwrap_or_default();
+            let client_id = settings.client_id.clone();
+            let expires_at = chrono::Utc::now().timestamp() + new_token.expires_in.unwrap_or(14400);
+            let mut updated = settings;
+            updated.access_token = Some(access.clone());
+            updated.refresh_token = new_token.refresh_token;
+            updated.token_expires_at = Some(expires_at);
+            let _ = save_settings(updated).await;
+            log::info!("Token refreshed successfully after 401");
+            Some((access, user_id, client_id))
+        }
+        Err(e) => {
+            log::warn!("Token refresh failed after 401: {}", e);
+            clear_auth_tokens().await;
+            notify_reauth_needed(instance_id).await;
+            None
+        }
+    }
+}
+
 /// Shared handler for auth-related PI messages. Call this from send_to_plugin in every action.
 pub async fn handle_auth_message(
     instance: &Instance,
@@ -103,15 +164,38 @@ pub async fn handle_auth_message(
                         match validate_token(token).await {
                             Ok(v) => (true, Some(v.login), s.client_id.clone()),
                             Err(_) => {
-                                // Token is invalid — clear it from settings
-                                let mut updated = s.clone();
-                                updated.access_token = None;
-                                updated.refresh_token = None;
-                                updated.token_expires_at = None;
-                                updated.user_id = None;
-                                updated.username = None;
-                                let _ = save_settings(updated).await;
-                                (false, None, s.client_id.clone())
+                                // Token validation failed — try to refresh before giving up
+                                if let Some(rt) = s.refresh_token.as_deref() {
+                                    match refresh_access_token(&s.client_id, &s.client_secret, rt).await {
+                                        Ok(new_tok) => {
+                                            match validate_token(&new_tok.access_token).await {
+                                                Ok(v) => {
+                                                    let expires_at = chrono::Utc::now().timestamp()
+                                                        + new_tok.expires_in.unwrap_or(14400);
+                                                    let mut updated = s.clone();
+                                                    updated.access_token = Some(new_tok.access_token);
+                                                    updated.refresh_token = new_tok.refresh_token;
+                                                    updated.token_expires_at = Some(expires_at);
+                                                    updated.user_id = Some(v.user_id);
+                                                    updated.username = Some(v.login.clone());
+                                                    let _ = save_settings(updated).await;
+                                                    (true, Some(v.login), s.client_id.clone())
+                                                }
+                                                Err(_) => {
+                                                    clear_auth_tokens().await;
+                                                    (false, None, s.client_id.clone())
+                                                }
+                                            }
+                                        }
+                                        Err(_) => {
+                                            clear_auth_tokens().await;
+                                            (false, None, s.client_id.clone())
+                                        }
+                                    }
+                                } else {
+                                    clear_auth_tokens().await;
+                                    (false, None, s.client_id.clone())
+                                }
                             }
                         }
                     } else {
@@ -120,6 +204,7 @@ pub async fn handle_auth_message(
                 } else {
                     (false, None, s.client_id.clone())
                 };
+
                 if let Some(inst) = openaction::get_instance(instance_id).await {
                     let _ = inst.send_to_property_inspector(json!({
                         "event": "auth_status",
@@ -129,6 +214,17 @@ pub async fn handle_auth_message(
                     })).await;
                 }
             });
+        }
+        "force_reauth" | "logout" => {
+            // Clear tokens but preserve client credentials so user doesn't have to re-enter them
+            clear_auth_tokens().await;
+            let client_id = read_settings().await.client_id;
+            instance.send_to_property_inspector(json!({
+                "event": "auth_status",
+                "authenticated": false,
+                "username": null,
+                "client_id": client_id
+            })).await?;
         }
         "set_title" => {
             let raw = payload.get("title").and_then(|t| t.as_str()).unwrap_or("");

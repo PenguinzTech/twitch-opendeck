@@ -1,6 +1,6 @@
-use crate::auth::get_valid_token;
+use crate::auth_handler::{get_auth, refresh_auth};
 use crate::settings::EmptySettings;
-use crate::twitch_api;
+use crate::twitch_api::{self, TwitchApiError};
 use openaction::{Action, Instance, OpenActionResult, async_trait};
 use serde_json::Value;
 
@@ -20,14 +20,17 @@ impl Action for CreateClipAction {
     }
 
     async fn key_down(&self, instance: &Instance, _settings: &Self::Settings) -> OpenActionResult<()> {
-        match get_valid_token().await {
-            Some((token, user_id, client_id)) => {
-                match twitch_api::create_clip(&token, &client_id, &user_id).await {
-                    Ok(clip) => { log::info!("Clip created: {}", clip.edit_url); instance.show_ok().await?; }
-                    Err(e) => { log::error!("create_clip failed: {}", e); instance.show_alert().await?; }
-                }
+        let Some((token, user_id, client_id)) = get_auth(instance).await? else { return Ok(()); };
+        let mut result = twitch_api::create_clip(&token, &client_id, &user_id).await;
+        if matches!(result, Err(TwitchApiError::Unauthorized)) {
+            match refresh_auth(&instance.instance_id).await {
+                Some((t2, uid2, cid2)) => result = twitch_api::create_clip(&t2, &cid2, &uid2).await,
+                None => { instance.show_alert().await?; return Ok(()); }
             }
-            None => instance.show_alert().await?,
+        }
+        match result {
+            Ok(clip) => { log::info!("Clip created: {}", clip.edit_url); instance.show_ok().await?; }
+            Err(e) => { log::error!("create_clip failed: {}", e); instance.show_alert().await?; }
         }
         Ok(())
     }

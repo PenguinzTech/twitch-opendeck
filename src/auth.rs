@@ -1,7 +1,7 @@
-use crate::settings::{read_settings, save_settings, GlobalSettings};
+use crate::settings::{read_settings, save_settings, SETTINGS};
 use chrono::Utc;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -167,10 +167,11 @@ pub async fn poll_for_token(
 }
 
 /// Refresh an expired access token.
-pub async fn refresh_access_token(client_id: &str, refresh_token: &str) -> Result<TokenResponse, AuthError> {
+pub async fn refresh_access_token(client_id: &str, client_secret: &str, refresh_token: &str) -> Result<TokenResponse, AuthError> {
     let client = Client::new();
     let params = [
         ("client_id", client_id),
+        ("client_secret", client_secret),
         ("refresh_token", refresh_token),
         ("grant_type", "refresh_token"),
     ];
@@ -214,6 +215,20 @@ pub async fn validate_token(access_token: &str) -> Result<ValidateResponse, Auth
     Ok(validate_response)
 }
 
+/// Clear only the OAuth tokens from global settings (preserves client_id/secret).
+/// Use when a token is determined to be invalid or revoked.
+pub async fn clear_auth_tokens() {
+    let mut settings = SETTINGS.write().await;
+    settings.access_token = None;
+    settings.refresh_token = None;
+    settings.token_expires_at = None;
+    settings.user_id = None;
+    settings.username = None;
+    let clone = settings.clone();
+    drop(settings);
+    let _ = openaction::set_global_settings(&clone).await;
+}
+
 /// Get a valid (non-expired) access token, refreshing if needed.
 /// Returns (access_token, user_id, client_id) if authenticated, None otherwise.
 pub async fn get_valid_token() -> Option<(String, String, String)> {
@@ -234,9 +249,8 @@ pub async fn get_valid_token() -> Option<(String, String, String)> {
         if expires_at - now < 60 {
             // Try to refresh
             if let Some(rt) = settings.refresh_token.clone() {
-                match refresh_access_token(&client_id, &rt).await {
+                match refresh_access_token(&client_id, &settings.client_secret, &rt).await {
                     Ok(new_token) => {
-                        // Save new token to settings
                         let new_expires_at = Utc::now().timestamp() + new_token.expires_in.unwrap_or(14400);
                         let mut updated = settings.clone();
                         updated.access_token = Some(new_token.access_token.clone());
@@ -245,7 +259,12 @@ pub async fn get_valid_token() -> Option<(String, String, String)> {
                         let _ = save_settings(updated).await;
                         return Some((new_token.access_token, user_id, client_id));
                     }
-                    Err(_) => return None,
+                    Err(e) => {
+                        // Refresh token is invalid — clear it so we don't keep retrying
+                        log::warn!("Proactive token refresh failed: {}", e);
+                        clear_auth_tokens().await;
+                        return None;
+                    }
                 }
             }
         }

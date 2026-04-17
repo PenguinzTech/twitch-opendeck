@@ -1,6 +1,6 @@
-use crate::auth::get_valid_token;
+use crate::auth_handler::{get_auth, refresh_auth};
 use crate::settings::SlowChatSettings;
-use crate::twitch_api;
+use crate::twitch_api::{self, TwitchApiError};
 use openaction::{Action, Instance, OpenActionResult, async_trait};
 use serde_json::{json, Value};
 use std::sync::atomic::Ordering;
@@ -17,22 +17,28 @@ impl Action for SlowChatAction {
         if let Some(img) = &settings.button_image {
             crate::auth_handler::set_button_image(instance, Some(img.as_str())).await?;
         }
-        let Some((token, user_id, client_id)) = get_valid_token().await else { return Ok(()); };
-        match twitch_api::get_chat_settings(&token, &client_id, &user_id, &user_id).await {
-            Ok(s) => instance.set_state(if s.slow_mode { 1 } else { 0 }).await?,
-            Err(e) => log::error!("get_chat_settings failed: {}", e),
+        if let Some((token, user_id, client_id)) = crate::auth::get_valid_token().await {
+            match twitch_api::get_chat_settings(&token, &client_id, &user_id, &user_id).await {
+                Ok(s) => instance.set_state(if s.slow_mode { 1 } else { 0 }).await?,
+                Err(e) => log::error!("get_chat_settings failed: {}", e),
+            }
         }
         Ok(())
     }
 
     async fn key_down(&self, instance: &Instance, settings: &Self::Settings) -> OpenActionResult<()> {
-        let Some((token, user_id, client_id)) = get_valid_token().await else {
-            instance.show_alert().await?; return Ok(());
-        };
         let active = instance.current_state_index.load(Ordering::Relaxed) == 1;
-        match twitch_api::patch_chat_settings(&token, &client_id, &user_id, &user_id,
-            json!({"slow_mode": !active, "slow_mode_wait_time": settings.wait_seconds})).await
-        {
+        let wait = settings.wait_seconds;
+        let Some((token, user_id, client_id)) = get_auth(instance).await? else { return Ok(()); };
+        let body = json!({"slow_mode": !active, "slow_mode_wait_time": wait});
+        let mut result = twitch_api::patch_chat_settings(&token, &client_id, &user_id, &user_id, body.clone()).await;
+        if matches!(result, Err(TwitchApiError::Unauthorized)) {
+            match refresh_auth(&instance.instance_id).await {
+                Some((t2, uid2, cid2)) => result = twitch_api::patch_chat_settings(&t2, &cid2, &uid2, &uid2, body).await,
+                None => { instance.show_alert().await?; return Ok(()); }
+            }
+        }
+        match result {
             Ok(_) => instance.set_state(if !active { 1 } else { 0 }).await?,
             Err(e) => { log::error!("patch slow_mode failed: {}", e); instance.show_alert().await?; }
         }

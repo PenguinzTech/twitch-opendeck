@@ -27,6 +27,9 @@
     </style>
 </head>
 <body>
+    <div id="reauth-warning" style="display:none;padding:8px 10px;background:#3a1a00;border-left:3px solid #f59e0b;border-radius:4px;font-size:12px;color:#f59e0b;margin-bottom:10px;">
+        Session expired — open the <strong>Setup</strong> button's Property Inspector to re-authenticate.
+    </div>
     <div class="container">
         <div class="form-group">
             <label>Button Label Line 1 (max 10 chars):</label>
@@ -131,6 +134,8 @@
                 var parts = (payload.title || '').split('\n');
                 document.getElementById('label-line1').value = parts[0] || '';
                 document.getElementById('label-line2').value = parts[1] || '';
+            } else if (payload.event === 'reauth_required') {
+                document.getElementById('reauth-warning').style.display = 'block';
             }
         }
     </script>
