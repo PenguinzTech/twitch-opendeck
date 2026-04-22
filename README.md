@@ -1,5 +1,7 @@
 # Twitch Stream Control for OpenDeck
 
+![Version: v0.1.0](https://img.shields.io/badge/version-v0.1.0-blue)
+
 An open-source Rust plugin for OpenDeck that lets streamers control Twitch chat and stream features directly from their deck hardware. Uses the Twitch Helix API with OAuth2 Device Code Flow for secure authentication.
 
 ## Features
